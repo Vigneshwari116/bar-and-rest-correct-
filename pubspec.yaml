@@ -1,0 +1,92 @@
+name: svenska
+description: "Svenska Restaurant"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.11.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.9
+  go_router: ^17.3.0
+  connectivity_plus: ^7.1.1
+  flutter_bloc: ^9.1.1
+  flutter_secure_storage: ^10.3.1
+  dio: ^5.9.2
+  pinput: ^6.0.2
+  jwt_decoder: ^2.0.1
+  image_picker: ^1.2.3
+  uuid: ^4.5.3
+
+  # Relational Database Constraints locked specifically for Dart 3.11.x stability
+  sqflite: ^2.4.3
+  sqflite_common_ffi: ^2.4.2
+  sqflite_common_ffi_web: ^1.1.2
+
+  # Automatic Local Server IP Discovery Package
+
+  # Network & Server Utilities
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  shelf_cors_headers: ^0.1.5
+  http: ^1.6.0
+
+  # System Utilities
+  path_provider: ^2.1.6
+  intl: ^0.20.3
+  flutter_dotenv: ^6.0.1
+  get_it: ^9.2.0
+  flutter_svg: ^2.2.3
+  pdf: ^3.13.0
+  printing: ^5.15.0
+  share_plus: ^12.0.1
+  crypto: ^3.0.7
+  csv: ^8.0.0
+  file_picker: ^11.0.2
+  device_info_plus: ^12.4.0
+  encrypt: ^5.0.3
+  pointycastle: ^3.9.1
+  path: ^1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^5.0.0
+
+flutter_icons:
+  android: true
+  ios: true
+  windows:
+    generate: true
+  image_path: assets/icons/app_icon.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/icons/app_icon.png
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/consolas.ttf
+    - .env
+
+  fonts:
+    - family: Lato-Regular
+      fonts:
+        - asset: fonts/Lato-Regular.ttf
+    - family: Lato-Black
+      fonts:
+        - asset: fonts/Lato-Black.ttf
+    - family: Lato-Bold
+      fonts:
+        - asset: fonts/Lato-Bold.ttf
+    - family: Proxima-Nova-Regular
+      fonts:
+        - asset: fonts/Proxima-Nova-Regular.ttf
