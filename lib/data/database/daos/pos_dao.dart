@@ -842,7 +842,15 @@ class PosDao {
         // 🍷 GUARD 2: Manual Excise Tables (50-55) -> ALWAYS LIQUOR
         else if (isManual && isExciseLiquorTable) {
           resolvedType = 'LIQUOR';
-          resolvedGroupName = 'LIQUOR';
+          // Keep the real group (BEER, WHISKY, ...) so reports can section items correctly
+          final List<Map<String, dynamic>> manualGroup = await txn.rawQuery(
+            'SELECT UPPER(category_name) AS n FROM ${DbContracts.tableManualLiquorCategories} '
+                'WHERE CAST(id AS TEXT) = CAST(? AS TEXT) LIMIT 1',
+            [category],
+          );
+          resolvedGroupName = manualGroup.isNotEmpty
+              ? (manualGroup.first['n']?.toString() ?? 'LIQUOR')
+              : 'LIQUOR';
         }
         // 🍺 GUARD 3: Client Requirement for Regular POS (Soda, Mineral Water, Cold Drinks -> LIQUOR)
         else if (!isManual) {
@@ -1069,16 +1077,21 @@ class PosDao {
         GROUP BY cat_type, cat_name
       ''');
 
+      const beerGroups = {
+        'BEER', 'TUBORG', 'TUBORG BEER', 'CARLSBERG BEER',
+        'KING FISHER', 'KNOCK OUT BEER', 'BIRA STRONG',
+      };
+
       double foodTotal = 0.0;
       double beerTotal = 0.0;
       double liquorTotal = 0.0;
 
       for (var row in archiveShares) {
-        String catType = (row['cat_type'] ?? 'FOOD').toString().toUpperCase();
-        String catName = (row['cat_name'] ?? '').toString().toUpperCase();
-        double amt = double.tryParse(row['total_amt']?.toString() ?? '0.0') ?? 0.0;
+        final String catType = (row['cat_type'] ?? 'FOOD').toString().trim().toUpperCase();
+        final String catName = (row['cat_name'] ?? '').toString().trim().toUpperCase();
+        final double amt = double.tryParse(row['total_amt']?.toString() ?? '0.0') ?? 0.0;
 
-        if (catType == 'BEER' || catName.contains('BEER') || catName == 'BEER') {
+        if (catType == 'BEER' || catName.contains('BEER') || beerGroups.contains(catName)) {
           beerTotal += amt;
         } else if (catType == 'LIQUOR' || catType == 'EXCISE' || catName.contains('LIQUOR') || catName == 'M') {
           liquorTotal += amt;
@@ -1086,7 +1099,6 @@ class PosDao {
           foodTotal += amt;
         }
       }
-
       return {
         'food_total': foodTotal,
         'beer_total': beerTotal,
@@ -1156,7 +1168,7 @@ class PosDao {
               '${DbContracts.tableHistoryOrdersArchive}',
               '${DbContracts.tableManualOrdersArchive}',
               '${DbContracts.tableManualFoodArchive}',
-              '${DbContracts.tableLiquorExciseAudit}'
+              '${DbContracts.tableLiquorExciseAudit}',
               '${DbContracts.tableManualLiquorProducts}'
 
             )

@@ -79,6 +79,31 @@ class ReportDao {
       return [];
     }
   }
+  // Shared section rule used by BOTH Daily Sales and Bill-wise reports.
+  // Order of checks matches the Daily Sales screen: cold drinks, others, beer, liquor, food.
+  static String _reportSection(String catType, String catName, String itemName) {
+    final t = catType.toUpperCase().trim();
+    final c = catName.toUpperCase().trim();
+    final n = itemName.toUpperCase().trim();
+    if (t == 'COLD DRINKS' || c == 'COLD' || c == 'K' || c == 'MILK' || c == 'MONSTER E D' ||
+        n.contains('WATER') || n.contains('SODA') || n.contains('SOFT DRINKS') || n.contains('KINLEY')) {
+      return 'COLD DRINKS & BEVERAGES';
+    }
+    if (c == 'CA' || c == 'CIG' || c.contains('CIGRATE') || n == 'C' ||
+        n.contains('GLASS') || n.contains('CONTAINER')) {
+      return 'OTHERS';
+    }
+    if (c == 'BEER' || n.contains('BEER') || n.contains('KF STRONG') || n.contains('BUDWEISER') ||
+        n.contains('TUBORG') || n.contains('CARLSBERG')) {
+      return 'BEER';
+    }
+    if (t == 'LIQUOR' || c == 'WHISKY' || c == 'SCOTCH' || c == 'RUM' || c == 'VODKA' ||
+        c == 'WINE' || c == 'GIN' || c == 'BRANDY' || c == 'BACARDI') {
+      return 'LIQUOR';
+    }
+    return 'FOOD';
+  }
+
   // 🌟 2. BILLWISE ABSTRACT REPORT
   Future<List<Map<String, dynamic>>> getBillwiseAbstractData() async {
     try {
@@ -188,16 +213,20 @@ class ReportDao {
           });
         }
 
-        if (catType == 'LIQUOR' || catType == 'COLD DRINKS') {
-          if (groupName == 'COLD' || groupName == 'K' || groupName == 'MILK' || itemName.contains('SODA') || itemName.contains('WATER') || itemName.contains('DRINKS')) {
+        // Same grouping rule as the Daily Sales report, so both always agree.
+        switch (_reportSection(catType, groupName, itemName)) {
+          case 'COLD DRINKS & BEVERAGES':
             node['soft_total'] = (node['soft_total'] as double) + amt;
-          } else if (groupName == 'CIG' || groupName.contains('CIGRATE') || itemName.contains('GLASS') || itemName.contains('CONTAINER')) {
+            break;
+          case 'OTHERS':
             node['others_total'] = (node['others_total'] as double) + amt;
-          } else {
+            break;
+          case 'BEER':
+          case 'LIQUOR':
             node['liquor_total'] = (node['liquor_total'] as double) + amt;
-          }
-        } else {
-          node['food_total'] = (node['food_total'] as double) + amt;
+            break;
+          default:
+            node['food_total'] = (node['food_total'] as double) + amt;
         }
 
         node['grand_total'] = (node['grand_total'] as double) + amt;
@@ -545,7 +574,10 @@ class ReportDao {
           e.${DbContracts.colExciseCreatedAt} as created_at
         FROM ${DbContracts.tableLiquorExciseAudit} e
         WHERE DATE(e.${DbContracts.colExciseCreatedAt}) BETWEEN DATE(?) AND DATE(?)
-          AND UPPER(TRIM(e.${DbContracts.colExciseItemName})) != 'C'
+          AND UPPER(TRIM(e.${DbContracts.colExciseItemName})) NOT IN ('C', 'CM', 'CA')
+          AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%CIG%'
+          AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%CIGRATE%'
+          AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%CIGARETTE%'
           AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%WATER%'
           AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%SODA%'
           AND UPPER(e.${DbContracts.colExciseItemName}) NOT LIKE '%KINLEY%'

@@ -533,8 +533,9 @@ class AuditPdfPrinter {
       }
     }
 
-    final double cgst = totalAmount * 0.025;
-    final double sgst = totalAmount * 0.025;
+    // 5% tax (2.5% CGST + 2.5% SGST) applies to FOOD only, not water/soft drinks/soda.
+    final double cgst = foodAmount * 0.025;
+    final double sgst = foodAmount * 0.025;
     final double grandTotal = totalAmount + cgst + sgst;
 
     pdf.addPage(
