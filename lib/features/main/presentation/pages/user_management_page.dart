@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/app_config.dart';
 
 // =============================================================================
 // 1. HOSPITALITY CORE SECURITY MODEL
@@ -112,7 +113,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     try {
       final apiClient = GetIt.I<ApiClient>();
       final String username = _usernameController.text.trim();
-      final tenantId = GetIt.I<String>(instanceName: 'tenant_id');
+      final tenantId = await AppConfig.getActiveTenantId();
 
       final response = await apiClient.post('/api/v1/users/create', data: {
         'tenant_id': tenantId,
