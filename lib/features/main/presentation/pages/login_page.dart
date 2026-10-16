@@ -60,6 +60,7 @@ class _LoginPageState extends State<LoginPage> {
         if (data['status'] == 'SUCCESS') {
           final String token = data['token'];
           final String serverRole = data['role']?.toString() ?? 'waiter';
+          final String activeTenantId = data['tenant_id']?.toString() ?? hardcodedTenantId;
 
           if (GetIt.I.isRegistered<String>(instanceName: "currentUser")) {
             await GetIt.I.unregister<String>(instanceName: "currentUser");
@@ -74,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
           if (GetIt.I.isRegistered<String>(instanceName: "tenant_id")) {
             await GetIt.I.unregister<String>(instanceName: "tenant_id");
           }
-          GetIt.I.registerSingleton<String>(hardcodedTenantId, instanceName: 'tenant_id');
+          GetIt.I.registerSingleton<String>(activeTenantId, instanceName: 'tenant_id');
 
           if (GetIt.I.isRegistered<String>(instanceName: "accessToken")) {
             await GetIt.I.unregister<String>(instanceName: "accessToken");
@@ -84,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
           debugPrint("✅ [SUCCESS]: Token ($token), Role ($serverRole) & Tenant ($hardcodedTenantId) registered in GetIt.");
 
           await SecureStorageUtil.saveToken(token);
-          await SecureStorageUtil.saveUserTenant(hardcodedTenantId);
+          await SecureStorageUtil.saveUserTenant(activeTenantId);
 
           if (mounted) {
             context.go(AppRoutes.dashboard);
