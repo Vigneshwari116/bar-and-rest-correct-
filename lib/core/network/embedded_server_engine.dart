@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import '../../data/database/db_contract.dart';
 import '../utils/password_hash_util.dart';
 import 'menu_api_routes.dart';
+import 'auth_middleware.dart';
 
 class EmbeddedServerEngine {
   final Database db;
@@ -237,6 +238,7 @@ class EmbeddedServerEngine {
     final pipeline = const Pipeline()
         .addMiddleware(logRequests())
         .addMiddleware(corsHeaders())
+        .addMiddleware(authMiddleware(db))
         .addHandler(router);
 
     _server = await shelf_io.serve(pipeline, InternetAddress.anyIPv4, targetPort, shared: true);
