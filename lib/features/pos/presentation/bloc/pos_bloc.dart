@@ -870,11 +870,19 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         final matches = order['table_id'].toString().toUpperCase() == event.tableId.toUpperCase();
         final rawManual = order['is_manual'];
         final isManual = (rawManual == 1 || rawManual == true || rawManual.toString() == '1');
-        final catType = order['category_type']?.toString().toUpperCase() ?? 'FOOD';
-        return matches && isManual && (catType == 'FOOD' || catType != 'LIQUOR');
+        return matches && isManual;
       }).toList();
 
-      List<Map<String, dynamic>> foodItems = currentTableOrders.map((o) => Map<String, dynamic>.from(o)).toList();
+      final List<Map<String, dynamic>> foodItems = [];
+      final List<Map<String, dynamic>> liquorItems = [];
+      for (final o in currentTableOrders) {
+        final String itemType = o['category_type']?.toString().toUpperCase() ?? 'FOOD';
+        if (itemType == 'LIQUOR') {
+          liquorItems.add(Map<String, dynamic>.from(o));
+        } else {
+          foodItems.add(Map<String, dynamic>.from(o));
+        }
+      }
 
       // Step A: Server/DB ko checkout request bhejo
       final response = await apiClient.post('/api/v1/pos/manual/checkout', data: {
@@ -887,7 +895,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
         final dbData = response.data['data'];
 
         // 🌟 DATABASE SE AAYA CONFIRMED FOOD BILL NUMBER & DATE
-        final String confirmedFoodBillNo = dbData['food_bill_no']?.toString() ?? dbData['manual_bill_no']?.toString() ?? '1';
+        final String confirmedFoodBillNo = dbData['manual_bill_no']?.toString() ?? dbData['bill_id']?.toString() ?? '1';
         final String confirmedCreatedAt = dbData['created_at']?.toString() ?? DateTime.now().toIso8601String();
         final double confirmedGrandTotal = double.tryParse(dbData['grand_total']?.toString() ?? '0.0') ?? 0.0;
 
@@ -899,7 +907,7 @@ class PosBloc extends Bloc<PosEvent, PosState> {
             tableId: event.tableId,
             mobile: event.mobileNumber ?? '',
             foodItems: foodItems,
-            liquorItems: const [],
+            liquorItems: liquorItems,
             grandTotal: confirmedGrandTotal,
             billNo: confirmedFoodBillNo, // 👈 🌟 100% DB CONFIRMED NUMBER
             billDateTime: confirmedCreatedAt,
